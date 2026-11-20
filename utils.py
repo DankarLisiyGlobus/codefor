@@ -51,7 +51,7 @@ def save_attachment(file, post_id, file_type='file'):
                 'original_filename': file.filename
             }
         else:
-            # Сохраняем как файл для скачивания
+            #Сохраняем как файл для скачивания
             upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'files')
             filepath = os.path.join(upload_folder, filename)
             file.save(filepath)
