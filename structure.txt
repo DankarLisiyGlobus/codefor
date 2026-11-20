@@ -1,0 +1,34 @@
+codefor/
+├── app.py                 # Главный файл Flask
+├── config.py              # Конфигурация
+├── models.py              # Модели базы данных
+├── routes.py              # Маршруты
+├── auth.py                # Аутентификация
+├── admin.py               # Админ панель
+├── utils.py               # Утилиты
+├── requirements.txt       # Зависимости
+├── database.db            # SQLite база (создастся автоматически)
+├── uploads/               # Загруженные файлы
+│   ├── files/             # Обычные файлы
+│   └── images/            # Изображения
+├── static/
+│   ├── css/
+│   │   └── style.css      # Стили (светлая/темная тема)
+│   └── js/
+│       └── main.js        # JavaScript
+├── templates/             # HTML шаблоны
+│   ├── base.html          # Базовый шаблон
+│   ├── index.html         # Главная страница
+│   ├── login.html         # Вход
+│   ├── register.html      # Регистрация
+│   ├── profile.html       # Профиль
+│   ├── post.html          # Страница поста
+│   ├── create_post.html   # Создание поста
+│   └── admin/
+│       ├── dashboard.html # Админ панель
+│       ├── users.html     # Управление пользователями
+│       └── deleted_posts.html # Удаленные посты
+└── lang/                  # Языковые файлы
+    ├── en.json
+    ├── ru.json
+    └── README.md

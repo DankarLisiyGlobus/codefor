@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="post-full">
+    <div class="post-header">
+        <h1>{{ post.title }}</h1>
+        <div class="post-meta">
+            <span class="author">
+                <a href="{{ url_for('profile', username=post.author.username) }}">
+                    {{ post.author.display_name or post.author.username }}
+                </a>
+            </span>
+            <span class="date">{{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            
+            {% if session.get('user_id') == post.user_id or session.get('is_admin') %}
+                <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" 
+                      style="display:inline;" onsubmit="return confirm('Удалить пост?')">
+                    <button type="submit" class="btn btn-danger btn-sm">{{ t('delete') }}</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="post-content">
+        {{ post.content|safe }}
+    </div>
+    
+    {% if attachments %}
+    <div class="post-attachments">
+        <h3>Вложения:</h3>
+        <div class="attachments-list">
+            {% for attachment in attachments %}
+                {% if attachment.file_type == 'image' and attachment.base64_data %}
+                    <div class="attachment-image">
+                        <img src="data:image/png;base64,{{ attachment.base64_data }}" 
+                             alt="{{ attachment.original_filename }}">
+                        <p>{{ attachment.original_filename }}</p>
+                    </div>
+                {% else %}
+                    <div class="attachment-file">
+                        <a href="{{ url_for('uploaded_file', filename=attachment.filename) }}" 
+                           download class="btn btn-outline">
+                            📎 {{ attachment.original_filename }}
+                        </a>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</article>
+
+<a href="{{ url_for('index') }}" class="btn btn-outline">&larr; Назад к ленте</a>
+{% endblock %}

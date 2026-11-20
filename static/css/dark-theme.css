@@ -1,0 +1,139 @@
+/* Темная тема */
+body.dark-theme {
+    background-color: #1a1a2e;
+    color: #eaeaea;
+}
+
+body.dark-theme .navbar {
+    background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+}
+
+body.dark-theme .logo {
+    color: #e94560;
+}
+
+body.dark-theme .btn {
+    background: #16213e;
+    color: #e94560;
+}
+
+body.dark-theme .btn-primary {
+    background: #e94560;
+    color: white;
+}
+
+body.dark-theme .btn-outline {
+    border-color: #e94560;
+    color: #e94560;
+}
+
+body.dark-theme .page-header h1 {
+    color: #eaeaea;
+}
+
+body.dark-theme .post-card,
+body.dark-theme .post-full,
+body.dark-theme .form,
+body.dark-theme .profile-header,
+body.dark-theme .user-posts,
+body.dark-theme .admin-section {
+    background: #16213e;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark-theme .post-header h2 a {
+    color: #e94560;
+}
+
+body.dark-theme .post-meta {
+    color: #a0a0a0;
+}
+
+body.dark-theme .post-preview {
+    color: #c0c0c0;
+}
+
+body.dark-theme .post-attachments {
+    background: #0f3460;
+    color: #a0a0a0;
+}
+
+body.dark-theme .form-group label {
+    color: #eaeaea;
+}
+
+body.dark-theme .form-control {
+    background: #0f3460;
+    border-color: #1a1a2e;
+    color: #eaeaea;
+}
+
+body.dark-theme .form-control:focus {
+    border-color: #e94560;
+}
+
+body.dark-theme small {
+    color: #a0a0a0;
+}
+
+body.dark-theme .alert-success {
+    background: #1e3a2f;
+    border-color: #27ae60;
+    color: #6fcf97;
+}
+
+body.dark-theme .alert-error {
+    background: #3a1e1e;
+    border-color: #e74c3c;
+    color: #ff6b6b;
+}
+
+body.dark-theme .username {
+    color: #a0a0a0;
+}
+
+body.dark-theme .bio {
+    color: #c0c0c0;
+}
+
+body.dark-theme .member-since {
+    color: #707070;
+}
+
+body.dark-theme .no-posts {
+    color: #707070;
+}
+
+body.dark-theme .admin-table th {
+    background: #0f3460;
+}
+
+body.dark-theme .admin-table td {
+    border-bottom-color: #0f3460;
+}
+
+body.dark-theme .admin-table tr:hover {
+    background: #0f3460;
+}
+
+body.dark-theme .badge-success {
+    background: #1e3a2f;
+    color: #6fcf97;
+}
+
+body.dark-theme .badge-danger {
+    background: #3a1e1e;
+    color: #ff6b6b;
+}
+
+body.dark-theme .auth-link a {
+    color: #e94560;
+}
+
+body.dark-theme .github-link {
+    color: #e94560;
+}
+
+body.dark-theme .pagination .ellipsis {
+    color: #a0a0a0;
+}

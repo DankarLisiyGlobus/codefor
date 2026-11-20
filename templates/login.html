@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>{{ t('login') }}</h1>
+    
+    <form method="POST" class="form auth-form">
+        <div class="form-group">
+            <label for="username">{{ t('username') }}:</label>
+            <input type="text" id="username" name="username" required class="form-control">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required class="form-control">
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-lg">{{ t('login') }}</button>
+    </form>
+    
+    <p class="auth-link">Нет аккаунта? <a href="{{ url_for('register') }}">{{ t('register') }}</a></p>
+</div>
+{% endblock %}

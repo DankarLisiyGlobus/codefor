@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ t('admin_panel') }}</h1>
+</div>
+
+<div class="admin-section">
+    <h2>{{ t('users') }}</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>{{ t('username') }}</th>
+                <th>Email</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>
+                    <a href="{{ url_for('profile', username=user.username) }}">
+                        {{ user.username }}
+                    </a>
+                </td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.is_admin %}
+                        <span class="badge badge-success">Admin</span>
+                    {% endif %}
+                    {% if user.is_banned %}
+                        <span class="badge badge-danger">{{ t('banned') }}</span>
+                    {% endif %}
+                    {% if user.is_deleted %}
+                        <span class="badge badge-danger">{{ t('deleted') }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not user.is_admin %}
+                        <form method="POST" action="{{ url_for('ban_user', user_id=user.id) }}" 
+                              style="display:inline;">
+                            <button type="submit" class="btn btn-sm {% if user.is_banned %}btn-success{% else %}btn-warning{% endif %}">
+                                {% if user.is_banned %}{{ t('unban_user') }}{% else %}{{ t('ban_user') }}{% endif %}
+                            </button>
+                        </form>
+                        
+                        <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" 
+                              style="display:inline;" onsubmit="return confirm('Вы уверены?')">
+                            <button type="submit" class="btn btn-sm {% if user.is_deleted %}btn-success{% else %}btn-danger{% endif %}">
+                                {% if user.is_deleted %}Восстановить{% else %}{{ t('delete_user') }}{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="admin-links">
+    <a href="{{ url_for('deleted_posts') }}" class="btn btn-primary">{{ t('deleted_posts') }}</a>
+</div>
+{% endblock %}
