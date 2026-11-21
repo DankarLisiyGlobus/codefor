@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="tui-panel narrow center">
+    <div class="subhead c-red">── 500 ──</div>
+    <p class="c-red">[ ERR ] {{ t('server_error') }}</p>
+    <a href="{{ url_for('index') }}" class="tui-btn">[ {{ t('home') }} ]</a>
+</div>
+{% endblock %}

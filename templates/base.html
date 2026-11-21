@@ -3,54 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>codeFor - Programming Community</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>codeFor :: community</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme.css') }}" id="dark-theme" disabled>
 </head>
-<body class="{% if session.get('theme') == 'dark' %}dark-theme{% endif %}">
-    <nav class="navbar">
-        <div class="container">
-            <a href="{{ url_for('index') }}" class="logo">codeFor</a>
-            
-            <div class="nav-links">
-                <button onclick="toggleTheme()" class="btn-icon" title="Сменить тему">🌓</button>
-                
-                <select onchange="changeLanguage(this.value)" class="lang-select">
-                    <option value="ru" {% if language == 'ru' %}selected{% endif %}>🇷🇺 RU</option>
-                    <option value="en" {% if language == 'en' %}selected{% endif %}>🇬🇧 EN</option>
-                </select>
-                
-                {% if session.get('user_id') %}
-                    <a href="{{ url_for('new_post') }}" class="btn btn-primary">{{ t('new_post') }}</a>
-                    
-                    {% if session.get('is_admin') %}
-                        <a href="{{ url_for('admin_panel') }}" class="btn">{{ t('admin_panel') }}</a>
-                    {% endif %}
-                    
-                    <a href="{{ url_for('profile', username=session.get('username')) }}" class="btn">
-                        {{ session.get('username') }}
-                    </a>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline">{{ t('logout') }}</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}" class="btn">{{ t('login') }}</a>
-                    <a href="{{ url_for('register') }}" class="btn btn-primary">{{ t('register') }}</a>
-                {% endif %}
+<body>
+    <div class="crt">
+        <header class="tui-topbar">
+            <div class="topbar-left">
+                <a href="{{ url_for('index') }}" class="logo">
+                    <span class="c-cyan">┌─[</span> <span class="c-green">codeFor</span> <span class="c-cyan">]─┐</span>
+                </a>
             </div>
-        </div>
-    </nav>
-    
-    <main class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
+            <div class="topbar-right">
+                <form class="search-form" method="GET" action="{{ url_for('index') }}">
+                    <span class="prompt c-green">$</span>
+                    <input type="text" name="q" value="{{ search or '' }}"
+                           placeholder="{{ t('search_placeholder') }}" class="search-input">
+                </form>
+                <button onclick="toggleTheme()" class="tui-btn small" title="theme">[ ◐ ]</button>
+                <a href="{{ url_for('set_lang', lang_code='ru') }}"
+                   class="tui-btn small {% if language=='ru' %}active{% endif %}">RU</a>
+                <a href="{{ url_for('set_lang', lang_code='en') }}"
+                   class="tui-btn small {% if language=='en' %}active{% endif %}">EN</a>
+            </div>
+        </header>
+
+        <nav class="tui-nav">
+            <a href="{{ url_for('index') }}" class="tui-btn">[ {{ t('home') }} ]</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('new_post') }}" class="tui-btn accent">[ + {{ t('new_post') }} ]</a>
+                {% if session.get('is_admin') %}
+                    <a href="{{ url_for('admin_panel') }}" class="tui-btn">[ {{ t('admin_panel') }} ]</a>
+                {% endif %}
+                <a href="{{ url_for('profile', username=session.get('username')) }}" class="tui-btn">
+                    [ @{{ session.get('username') }} ]
+                </a>
+                <a href="{{ url_for('logout') }}" class="tui-btn">[ {{ t('logout') }} ]</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="tui-btn">[ {{ t('login') }} ]</a>
+                <a href="{{ url_for('register') }}" class="tui-btn accent">[ {{ t('register') }} ]</a>
             {% endif %}
-        {% endwith %}
-        
-        {% block content %}{% endblock %}
-    </main>
-    
+            <span class="nav-fill"></span>
+            <span class="clock c-cyan" id="clock">--:--:--</span>
+        </nav>
+
+        <main class="tui-main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="tui-alert {% if category == 'error' %}err{% else %}ok{% endif %}">
+                            {% if category == 'error' %}[ERR]{% else %}[OK]{% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="tui-footer">
+            <span>└─ codeFor :: {{ language|upper }} :: v1.1</span>
+            <span class="dimmer">┌─ <kbd>d</kbd> theme</span>
+        </footer>
+    </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

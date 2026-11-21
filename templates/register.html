@@ -1,44 +1,35 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="auth-container">
-    <h1>{{ t('register') }}</h1>
-    
-    <form method="POST" class="form auth-form">
-        <div class="form-group">
-            <label for="username">{{ t('username') }}:</label>
-            <input type="text" id="username" name="username" required class="form-control">
+<div class="tui-panel narrow">
+    <div class="panel-title c-cyan">┌─[ {{ t('register') }} ]─┐</div>
+    <form method="POST" class="tui-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label>{{ t('username') }}</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="text" name="username" required maxlength="80" class="tui-input">
         </div>
-        
-        <div class="form-group">
-            <label for="email">{{ t('email') }}:</label>
-            <input type="email" id="email" name="email" required class="form-control">
+        <label>{{ t('email') }}</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="email" name="email" required maxlength="120" class="tui-input">
         </div>
-        
-        <div class="form-group">
-            <label for="display_name">{{ t('display_name') }}:</label>
-            <input type="text" id="display_name" name="display_name" class="form-control">
+        <label>{{ t('display_name') }}</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="text" name="display_name" maxlength="100" class="tui-input">
         </div>
-        
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" name="password" required class="form-control">
+        <label>{{ t('password') }} (min 8)</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="password" name="password" required minlength="8" class="tui-input">
         </div>
-        
-        <div class="form-group">
-            <label for="bio">{{ t('bio') }}:</label>
-            <textarea id="bio" name="bio" rows="3" class="form-control"></textarea>
+        <label>{{ t('bio') }}</label>
+        <textarea name="bio" rows="3" maxlength="1000" class="tui-input"></textarea>
+        <label>{{ t('github') }} URL</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="url" name="github_url" placeholder="https://github.com/..." class="tui-input">
         </div>
-        
-        <div class="form-group">
-            <label for="github_url">{{ t('github') }} URL:</label>
-            <input type="url" id="github_url" name="github_url" class="form-control" 
-                   placeholder="https://github.com/username">
-        </div>
-        
-        <button type="submit" class="btn btn-primary btn-lg">{{ t('register') }}</button>
+        <button type="submit" class="tui-btn accent big">[ {{ t('create') }} ]</button>
     </form>
-    
-    <p class="auth-link">Уже есть аккаунт? <a href="{{ url_for('login') }}">{{ t('login') }}</a></p>
+    <div class="dim center">
+        {{ t('have_account') }} <a href="{{ url_for('login') }}" class="c-cyan">[ {{ t('login') }} ]</a>
+    </div>
 </div>
 {% endblock %}

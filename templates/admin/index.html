@@ -1,67 +1,48 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="page-header">
-    <h1>{{ t('admin_panel') }}</h1>
+<div class="section-title">
+    <span class="ascii-bracket">┌──</span> {{ t('admin_panel') }} <span class="ascii-bracket">──┐</span>
 </div>
 
-<div class="admin-section">
-    <h2>{{ t('users') }}</h2>
-    <table class="admin-table">
+<div class="tui-panel">
+    <div class="subhead">── {{ t('users') }} ──</div>
+    <table class="tui-table">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>{{ t('username') }}</th>
-                <th>Email</th>
-                <th>Статус</th>
-                <th>Действия</th>
-            </tr>
+            <tr><th>ID</th><th>{{ t('username') }}</th><th>Email</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody>
-            {% for user in users %}
+        {% for u in users %}
             <tr>
-                <td>{{ user.id }}</td>
+                <td>{{ u.id }}</td>
+                <td><a href="{{ url_for('profile', username=u.username) }}">@{{ u.username }}</a></td>
+                <td class="dim">{{ u.email }}</td>
                 <td>
-                    <a href="{{ url_for('profile', username=user.username) }}">
-                        {{ user.username }}
-                    </a>
-                </td>
-                <td>{{ user.email }}</td>
-                <td>
-                    {% if user.is_admin %}
-                        <span class="badge badge-success">Admin</span>
-                    {% endif %}
-                    {% if user.is_banned %}
-                        <span class="badge badge-danger">{{ t('banned') }}</span>
-                    {% endif %}
-                    {% if user.is_deleted %}
-                        <span class="badge badge-danger">{{ t('deleted') }}</span>
-                    {% endif %}
+                    {% if u.is_admin %}<span class="badge accent">ADMIN</span>{% endif %}
+                    {% if u.is_banned %}<span class="badge danger">BANNED</span>{% endif %}
+                    {% if u.is_deleted %}<span class="badge danger">DELETED</span>{% endif %}
                 </td>
                 <td>
-                    {% if not user.is_admin %}
-                        <form method="POST" action="{{ url_for('ban_user', user_id=user.id) }}" 
-                              style="display:inline;">
-                            <button type="submit" class="btn btn-sm {% if user.is_banned %}btn-success{% else %}btn-warning{% endif %}">
-                                {% if user.is_banned %}{{ t('unban_user') }}{% else %}{{ t('ban_user') }}{% endif %}
-                            </button>
-                        </form>
-                        
-                        <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" 
-                              style="display:inline;" onsubmit="return confirm('Вы уверены?')">
-                            <button type="submit" class="btn btn-sm {% if user.is_deleted %}btn-success{% else %}btn-danger{% endif %}">
-                                {% if user.is_deleted %}Восстановить{% else %}{{ t('delete_user') }}{% endif %}
-                            </button>
-                        </form>
-                    {% endif %}
+                {% if not u.is_admin %}
+                    <form method="POST" action="{{ url_for('ban_user', user_id=u.id) }}" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="tui-btn small">{% if u.is_banned %}[ UNBAN ]{% else %}[ BAN ]{% endif %}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_user', user_id=u.id) }}" class="inline"
+                          onsubmit="return confirm('Sure?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="tui-btn small danger">{% if u.is_deleted %}[ RESTORE ]{% else %}[ DEL ]{% endif %}</button>
+                    </form>
+                {% else %}
+                    <span class="dim">—</span>
+                {% endif %}
                 </td>
             </tr>
-            {% endfor %}
+        {% endfor %}
         </tbody>
     </table>
 </div>
 
-<div class="admin-links">
-    <a href="{{ url_for('deleted_posts') }}" class="btn btn-primary">{{ t('deleted_posts') }}</a>
+<div class="section-title">
+    <a href="{{ url_for('deleted_posts') }}" class="tui-btn">[ {{ t('deleted_posts') }} ]</a>
 </div>
 {% endblock %}

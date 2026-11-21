@@ -1,23 +1,22 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="auth-container">
-    <h1>{{ t('login') }}</h1>
-    
-    <form method="POST" class="form auth-form">
-        <div class="form-group">
-            <label for="username">{{ t('username') }}:</label>
-            <input type="text" id="username" name="username" required class="form-control">
+<div class="tui-panel narrow">
+    <div class="panel-title c-cyan">┌─[ {{ t('login') }} ]─┐</div>
+    <form method="POST" class="tui-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+        <label>{{ t('username') }}</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="text" name="username" required autofocus class="tui-input">
         </div>
-        
-        <div class="form-group">
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" name="password" required class="form-control">
+        <label>{{ t('password') }}</label>
+        <div class="input-line"><span class="prompt c-green">></span>
+            <input type="password" name="password" required class="tui-input">
         </div>
-        
-        <button type="submit" class="btn btn-primary btn-lg">{{ t('login') }}</button>
+        <button type="submit" class="tui-btn accent big">[ {{ t('execute') }} ]</button>
     </form>
-    
-    <p class="auth-link">Нет аккаунта? <a href="{{ url_for('register') }}">{{ t('register') }}</a></p>
+    <div class="dim center">
+        {{ t('no_account') }} <a href="{{ url_for('register') }}" class="c-cyan">[ {{ t('register') }} ]</a>
+    </div>
 </div>
 {% endblock %}

@@ -1,60 +1,48 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="page-header">
-    <h1>{{ t('home') }}</h1>
+<div class="section-title">
+    <span class="ascii-bracket">┌──</span> {{ t('admin_panel') }} <span class="ascii-bracket">──┐</span>
 </div>
 
-<div class="posts-list">
-    {% for post in posts.items %}
-    <article class="post-card">
-        <div class="post-header">
-            <h2><a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a></h2>
-            <div class="post-meta">
-                <span class="author">
-                    <a href="{{ url_for('profile', username=post.author.username) }}">
-                        {{ post.author.display_name or post.author.username }}
-                    </a>
-                </span>
-                <span class="date">{{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-            </div>
-        </div>
-        
-        <div class="post-preview">
-            {{ post.content[:300] }}{% if post.content|length > 300 %}...{% endif %}
-        </div>
-        
-        {% if post.attachments.count() > 0 %}
-        <div class="post-attachments">
-            📎 {{ post.attachments.count() }} вложение(й)
-        </div>
-        {% endif %}
-    </article>
-    {% endfor %}
+<div class="tui-panel">
+    <div class="subhead">── {{ t('users') }} ──</div>
+    <table class="tui-table">
+        <thead>
+            <tr><th>ID</th><th>{{ t('username') }}</th><th>{{ t('email') }}</th><th>{{ t('status') }}</th><th>{{ t('actions') }}</th></tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td><a href="{{ url_for('profile', username=u.username) }}">@{{ u.username }}</a></td>
+                <td class="dim">{{ u.email }}</td>
+                <td>
+                    {% if u.is_admin %}<span class="badge accent">ADMIN</span>{% endif %}
+                    {% if u.is_banned %}<span class="badge danger">BANNED</span>{% endif %}
+                    {% if u.is_deleted %}<span class="badge danger">DELETED</span>{% endif %}
+                </td>
+                <td>
+                {% if not u.is_admin %}
+                    <form method="POST" action="{{ url_for('ban_user', user_id=u.id) }}" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="tui-btn small">{% if u.is_banned %}[ {{ t('unban_user') }} ]{% else %}[ {{ t('ban_user') }} ]{% endif %}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('delete_user', user_id=u.id) }}" class="inline"
+                          onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="tui-btn small danger">{% if u.is_deleted %}[ {{ t('restore') }} ]{% else %}[ {{ t('delete') }} ]{% endif %}</button>
+                    </form>
+                {% else %}
+                    <span class="dim">—</span>
+                {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 </div>
 
-<!-- Пагинация -->
-{% if posts.pages > 1 %}
-<nav class="pagination">
-    {% if posts.has_prev %}
-        <a href="{{ url_for('index', page=posts.prev_num) }}" class="btn btn-outline">&laquo; Назад</a>
-    {% endif %}
-    
-    {% for page_num in posts.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
-        {% if page_num %}
-            {% if page_num == posts.page %}
-                <span class="btn btn-primary current">{{ page_num }}</span>
-            {% else %}
-                <a href="{{ url_for('index', page=page_num) }}" class="btn btn-outline">{{ page_num }}</a>
-            {% endif %}
-        {% else %}
-            <span class="ellipsis">...</span>
-        {% endif %}
-    {% endfor %}
-    
-    {% if posts.has_next %}
-        <a href="{{ url_for('index', page=posts.next_num) }}" class="btn btn-outline">Вперед &raquo;</a>
-    {% endif %}
-</nav>
-{% endif %}
+<div class="section-title">
+    <a href="{{ url_for('deleted_posts') }}" class="tui-btn">[ {{ t('deleted_posts') }} ]</a>
+</div>
 {% endblock %}

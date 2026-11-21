@@ -1,40 +1,33 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="page-header">
-    <h1>{{ t('deleted_posts') }}</h1>
+<div class="section-title">
+    <span class="ascii-bracket">┌──</span> {{ t('deleted_posts') }} <span class="ascii-bracket">──┐</span>
 </div>
 
 {% if posts %}
 <div class="posts-list">
-    {% for post in posts %}
-    <article class="post-card deleted">
-        <div class="post-header">
-            <h2>{{ post.title }}</h2>
-            <div class="post-meta">
-                <span>Автор: {{ post.author.username }}</span>
-                <span>Удален: {{ post.updated_at.strftime('%d.%m.%Y %H:%M') }}</span>
-            </div>
+{% for post in posts %}
+    <article class="tui-card deleted">
+        <div class="tui-card-head">
+            <span class="prompt">▸</span>
+            <span class="post-title">{{ post.title }}</span>
+            <span class="date dim">[{{ post.updated_at.strftime('%Y-%m-%d %H:%M') }}]</span>
         </div>
-        
-        <div class="post-preview">
-            {{ post.content[:200] }}...
-        </div>
-        
+        <div class="tui-card-meta dim">@{{ post.author.username }} · {{ t('deleted') }}</div>
+        <div class="post-preview">{{ post.content[:160] }}...</div>
         <div class="post-actions">
-            <form method="POST" action="{{ url_for('restore_post', post_id=post.id) }}" 
-                  style="display:inline;">
-                <button type="submit" class="btn btn-success">{{ t('restore') }}</button>
+            <form method="POST" action="{{ url_for('restore_post', post_id=post.id) }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="tui-btn accent">[ {{ t('restore') }} ]</button>
             </form>
-            
-            <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline">Просмотреть</a>
+            <a class="tui-btn" href="{{ url_for('view_post', post_id=post.id) }}">[ VIEW ]</a>
         </div>
     </article>
-    {% endfor %}
+{% endfor %}
 </div>
 {% else %}
-    <p class="no-posts">Нет удаленных постов</p>
+    <div class="empty">[ EMPTY ] no deleted posts</div>
 {% endif %}
 
-<a href="{{ url_for('admin_panel') }}" class="btn btn-outline">&larr; Назад в админку</a>
+<a href="{{ url_for('admin_panel') }}" class="tui-btn">&lt;&lt; BACK</a>
 {% endblock %}

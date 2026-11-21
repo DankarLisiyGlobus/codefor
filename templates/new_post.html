@@ -1,30 +1,201 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="page-header">
-    <h1>{{ t('new_post') }}</h1>
+<div class="section-title">
+    <span class="ascii-bracket">┌──</span> {{ t('new_post') }} <span class="ascii-bracket">──┐</span>
 </div>
 
-<form method="POST" enctype="multipart/form-data" class="form">
-    <div class="form-group">
-        <label for="title">{{ t('title') }}:</label>
-        <input type="text" id="title" name="title" required class="form-control" maxlength="200">
+<form method="POST" enctype="multipart/form-data" class="tui-form" id="post-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label>{{ t('title') }}</label>
+    <div class="input-line"><span class="prompt">></span>
+        <input type="text" name="title" id="post-title" required maxlength="200"
+               class="tui-input" autofocus>
     </div>
-    
-    <div class="form-group">
-        <label for="content">{{ t('content') }} (HTML):</label>
-        <textarea id="content" name="content" rows="15" required class="form-control" 
-                  placeholder="<p>Ваш текст здесь...</p>"></textarea>
-        <small>Поддерживается HTML форматирование</small>
+
+    <label>{{ t('tags') }} ({{ t('tags_hint') }})</label>
+    <div class="input-line"><span class="prompt c-amber">#</span>
+        <input type="text" name="tags" class="tui-input" placeholder="python flask web">
     </div>
-    
-    <div class="form-group">
-        <label for="attachments">Прикрепить файлы:</label>
-        <input type="file" id="attachments" name="attachments" multiple class="form-control">
-        <small>Изображения будут встроены в пост, остальные файлы - для скачивания</small>
+
+    <div class="editor-tabs">
+        <button type="button" class="tab active" data-tab="write">[ {{ t('write') }} ]</button>
+        <button type="button" class="tab" data-tab="preview">[ {{ t('preview') }} ]</button>
+        <span class="nav-fill"></span>
+        <span class="dim">{{ t('markdown_supported') }}</span>
     </div>
-    
-    <button type="submit" class="btn btn-primary btn-lg">{{ t('submit') }}</button>
-    <a href="{{ url_for('index') }}" class="btn btn-outline">Отмена</a>
+
+    <div class="editor-toolbar">
+        <button type="button" data-md="bold"    class="tui-btn small">B</button>
+        <button type="button" data-md="italic"  class="tui-btn small"><em>I</em></button>
+        <button type="button" data-md="code"    class="tui-btn small">&lt;/&gt;</button>
+        <button type="button" data-md="codeblock" class="tui-btn small">{ }</button>
+        <button type="button" data-md="link"    class="tui-btn small">link</button>
+        <button type="button" data-md="image"   class="tui-btn small">img</button>
+        <button type="button" data-md="quote"   class="tui-btn small">&gt;</button>
+        <button type="button" data-md="ul"      class="tui-btn small">•</button>
+        <button type="button" data-md="ol"      class="tui-btn small">1.</button>
+        <span class="nav-fill"></span>
+        <span class="dim" id="draft-status"></span>
+    </div>
+
+    <div class="tab-pane" id="tab-write">
+        <textarea name="content" id="post-content" rows="18" required
+                  class="tui-input mono" placeholder="# hello&#10;&#10;{{ t('write_placeholder') }}"></textarea>
+    </div>
+    <div class="tab-pane hidden" id="tab-preview">
+        <div class="preview" id="preview-box"><span class="dim">{{ t('nothing_to_preview') }}</span></div>
+    </div>
+
+    <label>{{ t('attachments') }}</label>
+    <div class="drop-zone" id="drop-zone">
+        <div>⇩ {{ t('drop_files') }} <label for="attachments" class="link-like">[ {{ t('browse') }} ]</label></div>
+        <input type="file" id="attachments" name="attachments" multiple hidden>
+        <ul id="file-list" class="file-list"></ul>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="tui-btn accent big">[ {{ t('publish') }} ]</button>
+        <a href="{{ url_for('index') }}" class="tui-btn">[ {{ t('cancel') }} ]</a>
+    </div>
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const form = document.getElementById('post-form');
+    const title = document.getElementById('post-title');
+    const content = document.getElementById('post-content');
+    const previewBox = document.getElementById('preview-box');
+    const draftStatus = document.getElementById('draft-status');
+    const input = document.getElementById('attachments');
+    const list = document.getElementById('file-list');
+    const dz = document.getElementById('drop-zone');
+    const KEY = 'codefor:draft';
+    let files = [];
+
+    // ---------- Tabs ----------
+    document.querySelectorAll('.editor-tabs .tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.editor-tabs .tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const target = btn.dataset.tab;
+            document.getElementById('tab-write').classList.toggle('hidden', target !== 'write');
+            document.getElementById('tab-preview').classList.toggle('hidden', target !== 'preview');
+            if (target === 'preview') refreshPreview();
+        });
+    });
+
+    // ---------- Toolbar ----------
+    document.querySelectorAll('[data-md]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.md;
+            const start = content.selectionStart, end = content.selectionEnd;
+            const sel = content.value.substring(start, end);
+            const wrap = (a, b) => content.setRangeText(a + sel + b, start, end, 'end');
+            switch (type) {
+                case 'bold': wrap('**', '**'); break;
+                case 'italic': wrap('*', '*'); break;
+                case 'code': wrap('`', '`'); break;
+                case 'codeblock': wrap('\n```\n', '\n```\n'); break;
+                case 'link': wrap('[', '](https://)'); break;
+                case 'image': wrap('![alt](', ')'); break;
+                case 'quote':
+                    content.setRangeText(sel.split('\n').map(l => '> ' + l).join('\n'), start, end, 'end');
+                    break;
+                case 'ul':
+                    content.setRangeText(sel.split('\n').map(l => '- ' + l).join('\n'), start, end, 'end');
+                    break;
+                case 'ol':
+                    content.setRangeText(sel.split('\n').map((l,i) => (i+1)+'. '+l).join('\n'), start, end, 'end');
+                    break;
+            }
+            content.focus();
+            saveDraft();
+        });
+    });
+
+    // ---------- Preview ----------
+    let pvTimer = null;
+    function refreshPreview() {
+        clearTimeout(pvTimer);
+        pvTimer = setTimeout(async () => {
+            try {
+                const r = await fetch('{{ url_for("preview_markdown") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}',
+                    },
+                    body: JSON.stringify({ content: content.value })
+                });
+                if (r.ok) {
+                    const j = await r.json();
+                    previewBox.innerHTML = j.html || '<span class="dim">empty</span>';
+                }
+            } catch (e) { /* ignore */ }
+        }, 250);
+    }
+
+    // ---------- Draft ----------
+    function saveDraft() {
+        const data = { title: title.value, content: content.value };
+        localStorage.setItem(KEY, JSON.stringify(data));
+        draftStatus.textContent = '[draft saved]';
+        setTimeout(() => draftStatus.textContent = '', 1200);
+    }
+    [title, content].forEach(el => el.addEventListener('input', saveDraft));
+
+    try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) {
+            const d = JSON.parse(raw);
+            if (d.title && !title.value) title.value = d.title;
+            if (d.content && !content.value) content.value = d.content;
+        }
+    } catch (e) {}
+
+    form.addEventListener('submit', () => {
+        // синхронизируем файлы в input через DataTransfer перед отправкой
+        try {
+            const dt = new DataTransfer();
+            files.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+        } catch (e) { /* старый браузер — оставим как есть */ }
+        localStorage.removeItem(KEY);
+    });
+
+    // ---------- Drop zone ----------
+    function renderFiles() {
+        list.innerHTML = '';
+        files.forEach((f, i) => {
+            const li = document.createElement('li');
+            li.textContent = `▸ ${f.name} (${(f.size/1024).toFixed(1)} KB) `;
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.textContent = '[x]';
+            rm.className = 'tui-btn small';
+            rm.onclick = () => { files.splice(i, 1); renderFiles(); };
+            li.appendChild(rm);
+            list.appendChild(li);
+        });
+    }
+    function addFiles(newFiles) {
+        for (const f of newFiles) {
+            // дедуп по name+size
+            if (!files.some(x => x.name === f.name && x.size === f.size)) files.push(f);
+        }
+        renderFiles();
+    }
+    ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => {
+        e.preventDefault(); dz.classList.add('dragging');
+    }));
+    ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => {
+        e.preventDefault(); dz.classList.remove('dragging');
+    }));
+    dz.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+    input.addEventListener('change', () => addFiles(input.files));
+})();
+</script>
 {% endblock %}

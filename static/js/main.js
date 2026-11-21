@@ -1,37 +1,34 @@
-// Переключение темы
+// Theme
 function toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.toggle('dark-theme');
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    const isLight = document.body.classList.toggle('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
 }
 
-// Загрузка сохраненной темы при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-theme');
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-theme');
+    }
+    // clock
+    const clock = document.getElementById('clock');
+    if (clock) {
+        const tick = () => {
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            clock.textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        };
+        tick();
+        setInterval(tick, 1000);
     }
 });
 
-// Смена языка
-function changeLanguage(lang) {
-    window.location.href = '/lang/' + lang;
-}
-
-// Подтверждение удаления
-function confirmDelete(message) {
-    return confirm(message || 'Вы уверены?');
-}
-
-// Автоматическое расширение textarea
-document.addEventListener('DOMContentLoaded', function() {
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    });
+// keybinding: d = theme
+document.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+    if (e.key === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        toggleTheme();
+    }
 });
+
+// CSRF для AJAX (на будущее)
+window.CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';

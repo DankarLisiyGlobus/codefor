@@ -1,54 +1,133 @@
 {% extends "base.html" %}
-
 {% block content %}
-<article class="post-full">
-    <div class="post-header">
-        <h1>{{ post.title }}</h1>
-        <div class="post-meta">
-            <span class="author">
-                <a href="{{ url_for('profile', username=post.author.username) }}">
-                    {{ post.author.display_name or post.author.username }}
+
+{% if post.is_repost and post.repost_of %}
+    <div class="repost-banner big">
+        <span class="c-purple">🔁</span>
+        <a href="{{ url_for('profile', username=post.author.username) }}" class="c-purple">
+            @{{ post.author.username }}
+        </a>
+        <span class="dim">{{ t('reposted') }}</span>
+        <a href="{{ url_for('profile', username=post.repost_of.author.username) }}" class="c-cyan">
+            @{{ post.repost_of.author.username }}
+        </a>
+        <span class="dim">· {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        <a href="{{ url_for('view_post', post_id=post.repost_of.id) }}"
+           class="tui-btn small c-cyan">[ {{ t('open_original') }} ]</a>
+    </div>
+{% endif %}
+
+{% set display_post = post.repost_of if post.is_repost and post.repost_of else post %}
+
+<article class="tui-card full">
+    <div class="tui-card-head">
+        <span class="prompt c-green">▸</span>
+        <h1 class="post-title">{{ display_post.title }}</h1>
+    </div>
+    <div class="tui-card-meta dim">
+        @<a href="{{ url_for('profile', username=display_post.author.username) }}" class="c-cyan">
+            {{ display_post.author.username }}
+        </a>
+        · {{ display_post.created_at.strftime('%Y-%m-%d %H:%M') }}
+        {% if session.get('user_id') == post.user_id or session.get('is_admin') %}
+            · <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}"
+                    class="inline" onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="tui-btn small danger">[ {{ t('delete') }} ]</button>
+              </form>
+        {% endif %}
+    </div>
+
+    {% if display_post.tags.count() %}
+    <div class="tag-list">
+        {% for tag in display_post.tags %}
+            <a href="{{ url_for('index', tag=tag.name) }}" class="tag">#{{ tag.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="post-content">{{ display_post.content_html|safe }}</div>
+
+    {% if attachments and not post.is_repost %}
+    <div class="attachments">
+        <div class="subhead">── {{ t('attachments') }} ──</div>
+        <div class="attachments-grid">
+        {% for a in attachments %}
+            {% if a.file_type == 'image' and a.base64_data %}
+                <figure class="attachment-image">
+                    <img src="data:{{ a.mime or 'image/png' }};base64,{{ a.base64_data }}"
+                         alt="{{ a.original_filename }}">
+                    <figcaption class="dim">{{ a.original_filename }}</figcaption>
+                </figure>
+            {% else %}
+                <a class="tui-btn" download
+                   href="{{ url_for('uploaded_file', post_id=post.id, filename=a.filename) }}">
+                    [ ⇩ {{ a.original_filename }} ]
                 </a>
-            </span>
-            <span class="date">{{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
-            
-            {% if session.get('user_id') == post.user_id or session.get('is_admin') %}
-                <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" 
-                      style="display:inline;" onsubmit="return confirm('Удалить пост?')">
-                    <button type="submit" class="btn btn-danger btn-sm">{{ t('delete') }}</button>
-                </form>
             {% endif %}
-        </div>
-    </div>
-    
-    <div class="post-content">
-        {{ post.content|safe }}
-    </div>
-    
-    {% if attachments %}
-    <div class="post-attachments">
-        <h3>Вложения:</h3>
-        <div class="attachments-list">
-            {% for attachment in attachments %}
-                {% if attachment.file_type == 'image' and attachment.base64_data %}
-                    <div class="attachment-image">
-                        <img src="data:image/png;base64,{{ attachment.base64_data }}" 
-                             alt="{{ attachment.original_filename }}">
-                        <p>{{ attachment.original_filename }}</p>
-                    </div>
-                {% else %}
-                    <div class="attachment-file">
-                        <a href="{{ url_for('uploaded_file', filename=attachment.filename) }}" 
-                           download class="btn btn-outline">
-                            📎 {{ attachment.original_filename }}
-                        </a>
-                    </div>
-                {% endif %}
-            {% endfor %}
+        {% endfor %}
         </div>
     </div>
     {% endif %}
+
+    <div class="post-actions">
+        <form method="POST" action="{{ url_for('toggle_like', post_id=post.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="tui-btn {% if liked %}accent{% endif %}">
+                <span class="c-red">♥</span> {{ post.like_count }}
+                {% if liked %}· {{ t('liked') }}{% else %}· {{ t('like') }}{% endif %}
+            </button>
+        </form>
+        {% if session.get('user_id') and session.get('user_id') != post.user_id and not post.is_repost %}
+            <form method="POST" action="{{ url_for('repost', post_id=post.id) }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="tui-btn c-purple">🔁 {{ t('repost') }} · {{ post.repost_count }}</button>
+            </form>
+        {% endif %}
+        <a class="tui-btn c-cyan" href="#comments">✎ {{ post.comment_count }} {{ t('comments') }}</a>
+        <a class="tui-btn c-amber" href="{{ url_for('export_post', post_id=post.id) }}">
+            [ {{ t('export_md') }} ]
+        </a>
+    </div>
 </article>
 
-<a href="{{ url_for('index') }}" class="btn btn-outline">&larr; Назад к ленте</a>
+<section class="tui-card" id="comments">
+    <div class="subhead">── {{ t('comments') }} ({{ comments|length }}) ──</div>
+
+    {% if session.get('user_id') %}
+    <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}" class="tui-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="content" rows="3" maxlength="5000" required
+                  class="tui-input" placeholder="> {{ t('comment_placeholder') }}"></textarea>
+        <button class="tui-btn accent">[ {{ t('post_comment') }} ]</button>
+    </form>
+    {% else %}
+        <div class="dim">[ {{ t('login_required') }} ] ·
+            <a href="{{ url_for('login', next=request.path) }}" class="c-cyan">[ {{ t('login') }} ]</a>
+        </div>
+    {% endif %}
+
+    <div class="comment-list">
+        {% for c in comments %}
+            <div class="comment">
+                <div class="comment-head dim">
+                    @<a href="{{ url_for('profile', username=c.author.username) }}">{{ c.author.username }}</a>
+                    · {{ c.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    {% if session.get('user_id') == c.user_id or session.get('is_admin') %}
+                        <form method="POST" action="{{ url_for('delete_comment', comment_id=c.id) }}"
+                              class="inline" onsubmit="return confirm('{{ t('confirm_delete') }}')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="tui-btn small danger">[x]</button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="comment-body">{{ c.content }}</div>
+            </div>
+        {% else %}
+            <div class="empty">[ {{ t('empty') }} ] {{ t('no_comments_yet') }}</div>
+        {% endfor %}
+    </div>
+</section>
+
+<a href="{{ url_for('index') }}" class="tui-btn">&lt;&lt; {{ t('back') }}</a>
 {% endblock %}
